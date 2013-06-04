@@ -4,7 +4,7 @@ A knife-ec2 wrapper with support for YAML profiles
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add this line to your Chef repository's Gemfile:
 
     gem 'knife-ec2_launcher', :git => 'git@github.com:greenalto/knife-ec2_launcher.git'
 
@@ -35,12 +35,22 @@ Create a config/ec2.yml file in your Chef repository. Here's an example:
         chef_environment: "prod"
         distro: "ubuntu12.04-gems"
 
+To bootstrap a SVN server with the right security group, flavor and image, launch from your Chef repository:
+
+    knife ec2 server from profile svn.example.com --profile=svn
+
 You can override anything that can be set when bootstrapping a node using
-knife-ec2. See
+knife-ec2 using the YAML profiles. See
 [ec2_base](https://github.com/opscode/knife-ec2/blob/201850a938b3bece4719045786619ed9ad27ff0d/lib/chef/knife/ec2_base.rb#L37-L53)
 and
 [ec2_server_create](https://github.com/opscode/knife-ec2/blob/master/lib/chef/knife/ec2_server_create.rb#L42-L223)
 for a complete reference.
+
+You can also add any command-line switch from `knife ec2 server create --help`.
+For example, if you want to create a more powerful SVN server in another
+region as a one-time action:
+
+    knife ec2 server from profile svn_us.example.com --profile=svn --region=us-west-1 --flavor=m1.small
 
 If you don't specify something in the profile, it is going to be taken from
 your `.chef/knife.rb` or the defaults from the knife-ec2 plugin. For example:
