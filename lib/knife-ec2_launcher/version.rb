@@ -1,5 +1,5 @@
 module Knife
   module Ec2Launcher
-    VERSION = "0.0.1"
+    VERSION = "0.0.2"
   end
 end

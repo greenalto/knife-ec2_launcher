@@ -1,0 +1,11 @@
+profiles:
+  test:
+    security_groups:
+      - "dev"
+    run_list:
+      - "recipe[build-essential]"
+      - "role[base]"
+    environment: "prod"
+    distro: "chef-full"
+    image: "ami-0dadba79"
+    flavor: "m1.small"
