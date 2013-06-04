@@ -7,10 +7,10 @@ Gem::Specification.new do |spec|
   spec.name          = "knife-ec2_launcher"
   spec.version       = Knife::Ec2Launcher::VERSION
   spec.authors       = ["Greg Karékinian"]
-  spec.email         = ["greg@karekinian.com"]
+  spec.email         = ["greg@greenalto.com"]
   spec.description   = %q{A knife-ec2 wrapper with support for YAML profiles}
   spec.summary       = spec.description
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/greenalto/knife-ec2_launcher"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
