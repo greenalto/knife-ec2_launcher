@@ -1,4 +1,5 @@
-# This plugin needs .chef/knife.rb populated with knife[:aws_access_key_id]  and knife[:aws_secret_access_key] and a config/ec2.yml file
+# This plugin needs .chef/knife.rb populated with knife[:aws_access_key_id]
+# and knife[:aws_secret_access_key] and a config/ec2.yml file
 
 require 'chef/knife'
 require 'chef/knife/ec2_server_create'
