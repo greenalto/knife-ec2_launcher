@@ -5,7 +5,18 @@ profiles:
     run_list:
       - "recipe[build-essential]"
       - "role[base]"
-    environment: "prod"
+    environment: "dev"
     distro: "chef-full"
     image: "ami-0dadba79"
     flavor: "m1.small"
+  test_2:
+    security_groups:
+      - "prod"
+    run_list:
+      - "recipe[build-essential]"
+      - "role[base]"
+      - "role[webserver]"
+    environment: "prod"
+    distro: "chef-full"
+    image: "ami-0dadba79"
+    flavor: "c1.medium"
