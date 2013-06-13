@@ -9,7 +9,7 @@ describe Chef::Knife::Ec2ServerFromProfile do
     described_class.new(%w(ec2 server from profile node_name --profile=test), yaml_config_path)
   end
 
-  it 'inherits the options from Chef::Knife::Ec2ServerCreate' do
+  it 'gets the options from Chef::Knife::Ec2ServerCreate' do
     launcher.options[:ssh_port][:default].should == '22'
   end
 
@@ -37,15 +37,33 @@ describe Chef::Knife::Ec2ServerFromProfile do
       launcher.run
     end
 
-    before do
-      launcher.config[:image] = 'dummy'
-      launcher.config[:aws_ssh_key_id] = 'dummy'
-      launcher.config[:aws_access_key_id] = 'dummy'
-      launcher.config[:aws_secret_key_id] = 'dummy'
+    context 'when passing valid credentials & image' do
+      before do
+        launcher.config[:image] = 'ami-0dadba79'
+        launcher.config[:aws_ssh_key_id] = 'dummy'
+        launcher.config[:aws_access_key_id] = 'dummy'
+        launcher.config[:aws_secret_key_id] = 'dummy'
+      end
+
+      it 'runs' do
+        Chef::Knife::Ec2ServerCreate.any_instance.should_receive(:run).
+          and_return true
+
+        subject.should be_true
+      end
     end
 
-    it 'runs' do
-      expect { subject }.to raise_error SystemExit
+    context 'when passing invalid credentials & image' do
+      before do
+        launcher.config[:image] = 'dummy'
+        launcher.config[:aws_ssh_key_id] = 'dummy'
+        launcher.config[:aws_access_key_id] = 'dummy'
+        launcher.config[:aws_secret_key_id] = 'dummy'
+      end
+
+      it 'raises an exception and exits' do
+        expect { subject }.to raise_error SystemExit
+      end
     end
   end
 end

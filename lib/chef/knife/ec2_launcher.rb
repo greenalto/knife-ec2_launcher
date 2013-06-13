@@ -2,11 +2,14 @@
 # and knife[:aws_secret_access_key] and a config/ec2.yml file
 
 require 'chef/knife'
+require 'chef/knife/ec2_base'
 require 'chef/knife/ec2_server_create'
 
 class Chef
   class Knife
-    class Ec2ServerFromProfile < Ec2ServerCreate
+    class Ec2ServerFromProfile < Knife
+      include Knife::Ec2Base
+
       YAML_CONFIG_PATH = File.join(Dir.pwd, 'config/ec2.yml')
 
       deps do
@@ -27,7 +30,7 @@ class Chef
 
       # Set the config from the profile
       def initialize(argv=[], yaml_config_path=YAML_CONFIG_PATH)
-        super(argv)
+        super(argv) # Pass argv to Knife's constructor
 
         @yaml_config_path = yaml_config_path
         config[:chef_node_name] = chef_node_name
@@ -35,7 +38,13 @@ class Chef
         config[:ssh_user] = Chef::Config[:knife][:ssh_user]
 
         validate_profile!
-        set_config_from_profile
+
+        @server_create_command = Ec2ServerCreate.new
+        @server_create_command.config = config_from_profile
+      end
+
+      def run
+        @server_create_command.run
       end
 
       private
@@ -70,7 +79,7 @@ class Chef
         @profile_from_config ||= yaml_config['profiles'][config[:profile]]
       end
 
-      def set_config_from_profile
+      def config_from_profile
         profile_from_config.each do |key, value|
           option = key.to_sym
 
