@@ -32,44 +32,48 @@ class Chef
              :description => "Path to the YAML config file"
 
       # Set the config from the profile
-      def initialize(argv=[])
+      def initialize(argv=[], ec2_server_create=Ec2ServerCreate.new)
         super(argv) # Thanks, mixlib-cli
 
-        @profiles = YAMLProfiles.new(config[:yaml_config])
-        validate_profile!
-
-        config[:chef_node_name] = chef_node_name
-
+        # This loads the config
         configure_chef
 
-        # Temporary fix for http://tickets.opscode.com/browse/KNIFE-103
-        config[:ssh_user]        = config_from_knife_or_default(:ssh_user)
-        config[:ssh_port]        = config_from_knife_or_default(:ssh_port)
-        config[:ssh_gateway]     = config_from_knife_or_default(:ssh_gateway)
-        config[:identity_file]   = config_from_knife_or_default(:identity_file)
-        config[:host_key_verify] = config_from_knife_or_default(:host_key_verify)
-        config[:use_sudo]        = true if config[:ssh_user] != 'root'
-
-        # Load the knife config file right away. Provided by Knife class.
-        set_config_from_profile
-
-        @server_create_command = Ec2ServerCreate.new
-        @server_create_command.config = config
+        @profiles          = YAMLProfiles.new(config[:yaml_config])
+        @ec2_server_create = ec2_server_create
       end
 
       def run
-        @server_create_command.run
+        config[:chef_node_name] = chef_node_name
+        validate_profile!
+
+        work_around_chef_10_bug
+        set_config_from_profile
+
+        @ec2_server_create.config = config
+        @ec2_server_create.run
       end
 
       private
 
+      # http://tickets.opscode.com/browse/KNIFE-103 was closed, this bug is
+      # fixed in Chef 11.
+      def work_around_chef_10_bug
+        return if Chef::VERSION >= "11.0.0"
+
+        [:ssh_user, :ssh_port, :ssh_gateway, :identity_file,
+         :host_key_verify].each do |attribute|
+          config[attribute] = config_from_knife_or_default attribute
+        end
+      end
+
       def chef_node_name
         unless name_args.size == 1
-          ui.error "NODE_NAME is mandatory"
           show_usage
+          ui.fatal "NODE_NAME is mandatory"
           exit 1
         end
 
+        # We need a string, not an array of 1 string
         name_args.first
       end
 
@@ -77,9 +81,9 @@ class Chef
         @profiles[config[:profile]].each do |key, value|
           option = key.to_sym
 
-          config[option] = @profiles[config[:profile]][key]
-          msg_pair "#{option} set from profile",
-                    pretty_config(config[option])
+          value = @profiles[config[:profile]][key]
+          config[option] = value
+          msg_pair "#{key} set from profile", pretty_config(value)
         end
       end
 
@@ -89,16 +93,14 @@ class Chef
 
       def validate_profile!
         unless @profiles.all.include? config[:profile]
-          ui.error "The profile '#{config[:profile]}' is not present in the "\
+          ui.fatal "The profile '#{config[:profile]}' is not present in the "\
                    "'#{@profiles.config_file}' file. Did you make a typo?"
           exit 1
         end
       end
 
       def pretty_config(value)
-        return value.join(',') if value.is_a? Array
-
-        value
+        Array(value).join(',')
       end
     end
   end
