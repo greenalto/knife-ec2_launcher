@@ -15,7 +15,7 @@ describe Chef::Knife::YAMLProfiles do
     end
 
     it 'lists the profiles from the config file' do
-      subject.should == ['test', 'test_2']
+      expect(subject).to eq ['test', 'test_2']
     end
   end
 
@@ -25,7 +25,7 @@ describe Chef::Knife::YAMLProfiles do
     end
 
     it 'lists the profiles from the config file' do
-      subject.should == {
+      expected_config = {
         'security_groups' => ['dev'],
         'run_list'        => ['recipe[build-essential]', 'role[base]'],
         'environment'     => 'dev',
@@ -33,6 +33,7 @@ describe Chef::Knife::YAMLProfiles do
         'image'           => 'ami-0dadba79',
         'flavor'          => 'm1.small'
       }
+      expect(subject).to eq expected_config
     end
   end
 end
