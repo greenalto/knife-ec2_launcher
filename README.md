@@ -52,7 +52,7 @@ knife ec2 server from profile svn.example.com --profile=svn
 ```
 
 
-You can specify the path to a yml profile:
+You can specify the path to a YAML config file:
 
 ```shell
 knife ec2 server from profile svn.example.com --profile=svn \
