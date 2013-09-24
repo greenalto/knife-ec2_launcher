@@ -8,7 +8,8 @@ A knife-ec2 wrapper with support for YAML profiles
 
 Add this line to your Chef repository's Gemfile:
 
-    gem 'knife-ec2_launcher', :git => 'git@github.com:greenalto/knife-ec2_launcher.git'
+    gem 'knife-ec2_launcher',
+        :git => 'git@github.com:greenalto/knife-ec2_launcher.git'
 
 And then execute:
 
@@ -37,7 +38,8 @@ Create a config/ec2.yml file in your Chef repository. Here's an example:
         chef_environment: "prod"
         distro: "ubuntu12.04-gems"
 
-To bootstrap a SVN server with the right security group, flavor and image, launch from your Chef repository:
+To bootstrap a SVN server with the right security group, flavor and image,
+launch from your Chef repository:
 
     knife ec2 server from profile svn.example.com --profile=svn
 
@@ -49,8 +51,8 @@ and
 for a complete reference.
 
 You can also add any command-line switch from `knife ec2 server create --help`.
-For example, if you want to create a more powerful SVN server in another
-region as a one-time action:
+For example, if you want to create a more powerful SVN server in another region
+as a one-time action:
 
     knife ec2 server from profile svn_us.example.com --profile=svn --region=us-west-1 --flavor=m1.small
 
