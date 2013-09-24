@@ -79,7 +79,7 @@ If you don't specify something in the profile, it is going to be taken from
 your `.chef/knife.rb` or the defaults from the knife-ec2 plugin. For example:
 
 ```ruby
-knife[:flavor] = 'm1.small'
+knife[:flavor]   = 'm1.small'
 knife[:ssh_user] = 'ubuntu'
 ```
 
