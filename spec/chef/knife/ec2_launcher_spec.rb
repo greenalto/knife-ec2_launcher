@@ -1,59 +1,122 @@
 require 'spec_helper'
 
 describe Chef::Knife::Ec2ServerFromProfile do
+  class DummyEc2ServerCreate
+  end
+
   let :yaml_config_path do
     File.expand_path('../../../fixtures/config/ec2.yml', __FILE__)
   end
 
   let :argv do
-    %w(ec2 server from profile node_name --profile=test) << "--yaml-config=#{yaml_config_path}"
+    %w(ec2 server from profile node_name --profile=test) \
+      << "--yaml-config=#{yaml_config_path}"
+  end
+
+  let :ec2_server_create do
+    DummyEc2ServerCreate.new
   end
 
   let :launcher do
-    described_class.new(argv)
+    described_class.new(argv, ec2_server_create)
   end
 
-  it 'gets the options from Chef::Knife::Ec2ServerCreate' do
-    launcher.options[:ssh_port][:default].should == '22'
-  end
-
-  it 'sets the options from the profile in the config file' do
-    launcher.config[:security_groups].should == %w(dev)
-    launcher.config[:run_list].should == %w(recipe[build-essential] role[base])
-    launcher.config[:environment].should == 'dev'
-    launcher.config[:distro].should == 'chef-full'
-    launcher.config[:image].should == 'ami-0dadba79'
-    launcher.config[:flavor].should == 'm1.small'
-  end
-
-  context 'when passing a ssh_user through knife options' do
+  context 'when passing a node_name' do
     before do
-      Chef::Config[:knife][:ssh_user] = 'ubuntu'
+      ec2_server_create.stub :config=
+      ec2_server_create.stub :run
     end
 
-    it 'sets it correctly' do
-      launcher.config[:ssh_user].should == 'ubuntu'
-    end
-  end
-
-  describe '#run' do
-    subject do
-      launcher.run
-    end
-
-    context 'when passing valid credentials & image' do
+    context 'when a node_name and a profile are passed' do
       before do
-        launcher.config[:image] = 'ami-0dadba79'
-        launcher.config[:aws_ssh_key_id] = 'dummy'
+        silence(:stdout) { launcher.run }
+      end
+
+      it 'sets the default options' do
+        expect(launcher.options[:ssh_port][:default]).to eq '22'
+      end
+
+      it 'sets the options from the profile in the config file' do
+        [
+          [:security_groups, ['dev']],
+          [:run_list,        ['recipe[build-essential]', 'role[base]']],
+          [:environment,     'dev'],
+          [:distro,          'chef-full'],
+          [:image,           'ami-0dadba79'],
+          [:flavor,          'm1.small']
+        ].each do |config, value|
+          expect(launcher.config[config]).to eq value
+        end
+      end
+    end
+
+    context 'when setting a ssh_user through knife options' do
+      before do
+        Chef::Config[:knife][:ssh_user] = 'ubuntu'
+        silence(:stdout) { launcher.run }
+      end
+
+      it 'sets it correctly' do
+        expect(launcher.config[:ssh_user]).to eq 'ubuntu'
+      end
+    end
+
+    context 'passing valid credentials & image' do
+      before do
+        launcher.config[:image]             = 'ami-0dadba79'
+        launcher.config[:aws_ssh_key_id]    = 'dummy'
         launcher.config[:aws_access_key_id] = 'dummy'
         launcher.config[:aws_secret_key_id] = 'dummy'
+
+        expect(ec2_server_create).to receive(:run).and_return true
       end
 
       it 'runs' do
-        Chef::Knife::Ec2ServerCreate.any_instance.should_receive(:run).
-          and_return true
+        capture(:stdout) do
+          expect(launcher.run).to be_true
+        end
+      end
 
-        subject.should be_true
+      it 'outputs the config' do
+        content = capture(:stdout) { launcher.run }
+        [
+          'security_groups set from profile: dev',
+          'run_list set from profile: recipe\[build-essential\],role\[base\]',
+          'environment set from profile: dev',
+          'distro set from profile: chef-full',
+          'image set from profile: ami-0dadba79',
+          'flavor set from profile: m1.small'
+        ].each do |line|
+            expect(content).to match(/#{line}/)
+          end
+      end
+    end
+  end
+
+  context 'when passing invalid arguments' do
+    context 'when no node_name is passed' do
+      let :argv do
+        %w(ec2 server from profile --profile=test) \
+          << "--yaml-config=#{yaml_config_path}"
+      end
+
+      it 'exits the program' do
+        launcher.should_receive(:show_usage).and_return true
+        launcher.ui.should_receive(:fatal)
+        expect { launcher.run }.to raise_error SystemExit
+      end
+    end
+
+    context 'when too many args are passed' do
+      let :argv do
+        %w(ec2 server from profile node_name extra_param --profile=test) \
+          << "--yaml-config=#{yaml_config_path}"
+      end
+
+      it 'exits the program' do
+        launcher.should_receive(:show_usage).and_return true
+        launcher.ui.should_receive(:fatal)
+        expect { launcher.run }.to raise_error SystemExit
       end
     end
   end
