@@ -1,6 +1,6 @@
 # Knife EC2 Launcher
 
-[![Build Status](https://travis-ci.org/greenalto/knife-ec2_launcher.png?branch=rewrite)](https://travis-ci.org/greenalto/knife-ec2_launcher)
+[![Build Status](https://travis-ci.org/greenalto/knife-ec2_launcher.png)](https://travis-ci.org/greenalto/knife-ec2_launcher)
 
 A knife-ec2 wrapper with support for YAML profiles
 
