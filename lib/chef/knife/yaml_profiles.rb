@@ -6,7 +6,9 @@ class Chef
       attr_reader :config_file
 
       def initialize(config_file)
-        raise "No config file found at #{config_file}" unless File.exist? config_file
+        unless File.exist? config_file
+          raise "No config file found at #{config_file}"
+        end
         @config_file = config_file
       end
 
