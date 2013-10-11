@@ -27,7 +27,7 @@ describe Chef::Knife::Ec2ServerFromProfile do
       ec2_server_create.stub :run
     end
 
-    context 'when a node_name and a profile are passed' do
+    context 'when a node_name and a valid profile are passed' do
       before do
         silence(:stdout) { launcher.run }
       end
@@ -49,6 +49,19 @@ describe Chef::Knife::Ec2ServerFromProfile do
         end
       end
     end
+
+    context 'when a node_name and an invalid profile are passed' do
+      let :argv do
+        %w(ec2 server from profile node_name --profile=invalid) \
+          << "--yaml-config=#{yaml_config_path}"
+      end
+
+      it 'raises an exception' do
+        launcher.ui.should_receive(:fatal)
+        expect { launcher.run }.to raise_error SystemExit
+      end
+    end
+
 
     context 'when setting a ssh_user through knife options' do
       before do
